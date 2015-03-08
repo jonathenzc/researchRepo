@@ -11,7 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="dev_vector_Parser.cpp" />
+    <ClCompile Include="algorithm.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{406555E5-3DAF-4658-95BB-25C5E67F2CDA}</ProjectGuid>
