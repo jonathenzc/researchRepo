@@ -15,6 +15,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="kthNumber.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="algorithm.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
