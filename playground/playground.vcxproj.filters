@@ -15,10 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="kthNumber.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="algorithm.cpp">
+    <ClCompile Include="graph.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

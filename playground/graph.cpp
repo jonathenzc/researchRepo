@@ -6,6 +6,7 @@
 //Floyd-Warshall   2015.1.11
 //Prim             2015.1.14
 //Kruskal          2015.1.17
+//Topological sort 2015.3.9
 
 #include <iostream>
 #include <stack>
@@ -21,8 +22,8 @@ typedef int vertex;
 
 struct unDirectedEdge
 {
-	vertex start;
-	vertex end;
+	int start;
+	int end;
 	int value;
 };
 
@@ -48,6 +49,8 @@ public:
 	void Prim(vertex start);//思想和Dijkstra一样都是贪心思想。Dijkstra比Prim多了个步骤就是要更新源点到其他点的距离，而Prim只需要更新剩余点到MST中点的距离即可。
 	void Kruskal(vertex start);
 
+	//拓扑排序
+	void topologicalSort();
 private:
 	//深搜、广搜助手函数
 	bool stillUnvisited(bool isVisited[]);//判断图中节点是否访问过
@@ -59,6 +62,14 @@ private:
 	vertex nodeRoot(vertex v); //返回节点v的祖先节点
 	vertex *fatherNode;//助手变量
 
+	//拓扑排序助手变量
+	int *inDegree;//记录每个节点的入度数据
+	vertex *InDegreeZeroVertexSet;//入度为0的节点集合
+	int InDegreeZeroVertexCnt;//入度为0节点的数量
+	void topoSortInitiation();//对上面进行拓扑排序时需要用到的变量进行初始化
+	void findInDegreeZeroVertex();//寻找所有入度为0的节点
+	vertex *topoSortSequence;//拓扑序列
+
 	int nodes;
 	int edges;
 	unDirectedEdge *edgeSet; //储存无向边的信息
@@ -68,6 +79,30 @@ private:
 Graph::Graph()
 {
 	nodes = 0;
+}
+
+void Graph::topoSortInitiation()
+{
+	//初始化记录入度数据集合,设为0
+	inDegree = new int[nodes];
+	for (int i = 0; i < nodes; i++)
+		inDegree[i] = 0;
+
+	//初始化入度为0的节点集合
+	InDegreeZeroVertexSet = new vertex[nodes];
+	InDegreeZeroVertexCnt = 0;
+}
+
+void Graph::findInDegreeZeroVertex()
+{
+	for (int i = 0; i < nodes; i++)
+	{
+		if (inDegree[i] == 0)
+		{
+			InDegreeZeroVertexSet[InDegreeZeroVertexCnt] = i;
+			InDegreeZeroVertexCnt++;
+		}
+	}
 }
 
 //inputSource表明输入的方式是从控制台输入（1）还是文本输入（2）
@@ -90,7 +125,11 @@ void Graph::input(int inputSource)
 					adjacency[i][j] = AWAY;
 			}
 		}
-		
+
+		/************拓扑排序时会用到***********/
+		topoSortInitiation();
+		/************拓扑排序时会用到***********/
+
 		//是否为有向图
 		bool isDirected;
 		cout << "Is the graph directed?";
@@ -125,7 +164,16 @@ void Graph::input(int inputSource)
 				edgeSet[i].end = end;
 				edgeSet[i].value = value;
 			}
+
+			/************拓扑排序时会用到***********/
+			//尾节点入度不为0
+			inDegree[end]++;
+			/************拓扑排序时会用到***********/
 		}
+
+		/************拓扑排序时会用到***********/
+		findInDegreeZeroVertex();
+		/************拓扑排序时会用到***********/
 	}
 	else if (inputSource == 2)//从文本读入
 	{
@@ -138,9 +186,25 @@ void Graph::input(int inputSource)
 			return;
 		}
 
-		//从文件读取图的信息
+		//从文件读取图的信息l
 		//读取节点数
 		infile >> nodes;
+
+		//初始化邻接矩阵
+		for (int i = 0; i < nodes; i++)
+		{
+			for (int j = 0; j < nodes; j++)
+			{
+				if (i == j)
+					adjacency[i][j] = 0;
+				else
+					adjacency[i][j] = AWAY;
+			}
+		}
+
+		/************拓扑排序时会用到***********/
+		topoSortInitiation();
+		/************拓扑排序时会用到***********/
 
 		//读取边数
 		infile >> edges;
@@ -182,7 +246,16 @@ void Graph::input(int inputSource)
 				edgeSet[edgeIndex].value = value;
 				edgeIndex++;
 			}
+
+			/************拓扑排序时会用到***********/
+			//尾节点入度不为0
+			inDegree[end]++;
+			/************拓扑排序时会用到***********/
 		}
+
+		/************拓扑排序时会用到***********/
+		findInDegreeZeroVertex();
+		/************拓扑排序时会用到***********/
 
 		infile.close();
 
@@ -196,16 +269,16 @@ void Graph::output()
 
 	cout << "   ";
 	for (int i = 0; i < nodes; i++)
-		 cout<< i << " ";
+		cout << i << " ";
 
 	cout << endl;
 
 	for (int i = 0; i < nodes; i++)
 	{
-		cout << i<<": ";
+		cout << i << ": ";
 		for (int j = 0; j < nodes; j++)
 		{
-			cout << adjacency[i][j]<<" ";
+			cout << adjacency[i][j] << " ";
 		}
 
 		cout << endl;
@@ -295,7 +368,7 @@ void Graph::DepthFirstSearch(vertex start)
 		{
 			vertex v;
 			if (!s.empty())
-				 v = s.top();
+				v = s.top();
 			else
 			{
 				for (int i = 0; i < nodes; i++)
@@ -309,7 +382,7 @@ void Graph::DepthFirstSearch(vertex start)
 				}
 			}
 
-			cout << v <<" ";
+			cout << v << " ";
 
 			s.pop();
 
@@ -319,7 +392,7 @@ void Graph::DepthFirstSearch(vertex start)
 			for (int i = 0; i < nodes; i++)
 			{
 				//相连的点
-				if (i!=v && adjacency[v][i] != AWAY && !isVisited[i])
+				if (i != v && adjacency[v][i] != AWAY && !isVisited[i])
 					s.push(i);
 			}
 		}
@@ -388,12 +461,12 @@ void Graph::Dijkstra(vertex start)
 void Graph::BellmanFord(vertex start)
 {
 	//表明源点到其他各个顶点的最短距离，其中distance[i]表示源点start到点i的最短距离（在当前迭代能够经过的边）
-	int *distance = new int[nodes]; 
+	int *distance = new int[nodes];
 
 	//初始化distance数组
 	for (int i = 0; i < nodes; i++)
 		distance[i] = adjacency[start][i];
-	
+
 	//进行迭代对每个点经过所有边后的最短距离
 	for (int v = 0; v < nodes - 1; v++)//在第v次迭代(经过v个节点)时，distance(v) = min(distance(v-1), start到其他各个节点的距离+各个节点到目标的距离)
 	{
@@ -409,13 +482,13 @@ void Graph::BellmanFord(vertex start)
 					if (distance[end] > min)
 						distance[end] = min;
 				}
-			}	
+			}
 		}
 	}
 
 	//判断是否存在负权环，如果仍然能找到使距离变小的边，那么无法求出最短路径
 	bool NoShortestPath = false;
-	for (int source =0; source < nodes; source++)
+	for (int source = 0; source < nodes; source++)
 	{
 		for (int end = 0; end < nodes; end++)
 		{
@@ -441,62 +514,6 @@ void Graph::BellmanFord(vertex start)
 		cout << "There is a minus loop. Shortest path can't be found.\n";
 }
 
-//使用edge结构体来储存结果，不能直接用，需要调整一下
-// struct edge
-// {
-	// vertex start;
-	// vertex end;
-	// int value;
-// };
-
-// //count of intersections
-// int intersections = 0;
-
-// //single source shortest path
-// int *BellmanFord(vertex source, edge *edgeS,int edgeSize)
-// {
-	// //表明源点到其他各个顶点的最短距离，其中distance[i]表示源点start到点i的最短距离（在当前迭代能够经过的边）
-	// int *distance = new int[intersections];
-
-	// //初始化distance数组
-	// for (int i = 0; i <= intersections; i++)
-		// distance[i] = 999999;
-
-	// distance[source] = 0;
-
-	// for (int i = 0; i < edgeSize; i++)
-	// {
-		// if (edgeS[i].start == source )
-			// distance[edgeS[i].end] = edgeS[i].value;	
-	// }
-
-	// //进行迭代对每个点经过所有边后的最短距离
-	// for (int v = 0; v < intersections - 1; v++)//在第v次迭代(经过v个节点)时，distance(v) = min(distance(v-1), start到其他各个节点的距离+各个节点到目标的距离)
-	// {
-		// //复杂度为节点数*边，因为图的储存是通过邻接矩阵储存的，所以看上去是n^3
-		// for (int edgeIndex = 0; edgeIndex < edgeSize; edgeIndex++)
-		// {
-			// //relaxation
-			// vertex start = edgeS[edgeIndex].start;
-			// vertex end = edgeS[edgeIndex].end;
-			// int value = edgeS[edgeIndex].value;
-
-			// int min = distance[start] + value;
-			// if (distance[end] > min)
-				// distance[end] = min;
-		// }
-	// }
-
-	// //for (int i = 1; i <= intersections; i++)
-	// //	cout << i<<" "<<distance[i]<<endl;
-
-
-	// //for (int i = 0; i < nodes; i++)
-	// //	cout << start << "->" << i << " : " << distance[i] << endl;
-
-	// return distance;
-// }
-
 void Graph::FloydWarshall()
 {
 	//声明distance二维数组，用来储存图中各点到其他点的最短距离
@@ -519,8 +536,8 @@ void Graph::FloydWarshall()
 		{
 			for (int end = 0; end < nodes; end++)
 			{
-				if (distance[source][end] > distance[source][middle]+distance[middle][end])
-					distance[source][end] = distance[source][middle]+distance[middle][end];
+				if (distance[source][end] > distance[source][middle] + distance[middle][end])
+					distance[source][end] = distance[source][middle] + distance[middle][end];
 			}
 		}
 	}
@@ -531,7 +548,7 @@ void Graph::FloydWarshall()
 	for (int i = 0; i < nodes; i++)
 	{
 		for (int j = 0; j < nodes; j++)
-			cout << distance[i][j]<<" ";
+			cout << distance[i][j] << " ";
 
 		cout << endl;
 	}
@@ -543,7 +560,7 @@ void Graph::Prim(vertex start)
 	int **mst = new int*[nodes];
 	for (int i = 0; i < nodes; i++)
 		mst[i] = new int[nodes];
-	
+
 	//初始化二维数组mst
 	for (int i = 0; i < nodes; i++)
 		for (int j = 0; j < nodes; j++)
@@ -569,7 +586,7 @@ void Graph::Prim(vertex start)
 	isAddedToMST[start] = true;
 
 	//Prim算法
-	for (int i = 0; i < nodes-1; i++)
+	for (int i = 0; i < nodes - 1; i++)
 	{
 		int min = AWAY;
 		vertex vertexToADD;
@@ -604,12 +621,12 @@ void Graph::Prim(vertex start)
 		for (int j = 0; j < nodes; j++)
 		{
 			if (mst[i][j] != AWAY)
-				cout << i << "->" << j << " "<<mst[i][j]<<endl;
+				cout << i << "->" << j << " " << mst[i][j] << endl;
 		}
 	}
 }
 
-bool edgeCmp(unDirectedEdge edge1,unDirectedEdge edge2)//排序函数的助手函数，返回边权值较小的边
+bool edgeCmp(unDirectedEdge edge1, unDirectedEdge edge2)//排序函数的助手函数，返回边权值较小的边
 {
 	return edge1.value < edge2.value;
 }
@@ -627,7 +644,7 @@ vertex Graph::nodeRoot(vertex v)
 void Graph::Kruskal(vertex start)
 {
 	//mst储存最小生成树的结果，大小为节点数-1
-	unDirectedEdge *mst = new unDirectedEdge[nodes-1];
+	unDirectedEdge *mst = new unDirectedEdge[nodes - 1];
 
 	//对边集进行排序
 	sort(edgeSet, edgeSet + edges, edgeCmp);
@@ -665,12 +682,53 @@ void Graph::Kruskal(vertex start)
 		cout << mst[i].start << " " << mst[i].end << " " << mst[i].value << endl;
 }
 
+//如果用邻接表实现的话,对边的访问就是O(E),整个复杂度为O(V+E);
+//而如果是邻接矩阵实现的话，对边的访问就是O(V+V^2)=O(V^2)
+void Graph::topologicalSort()
+{
+	topoSortSequence = new vertex[nodes];//初始化拓扑序列
+	int topoIndex = 0;//用来将节点插入拓扑序列的下标索引
+
+	//在初始化的时候已经找出入度为0的节点集合InDegreeZeroVertexSet
+	for (int i = 0; i < InDegreeZeroVertexCnt; i++)
+	{
+		//将入度为0的节点插入拓扑序列中
+		cout << InDegreeZeroVertexSet[i] << " vertex degree = 0" << endl;
+
+		vertex InDegreeZeroVertex = InDegreeZeroVertexSet[i];
+		topoSortSequence[topoIndex++] = InDegreeZeroVertex;
+
+		//遍历该点引出的所有点
+		for (int vertexJ = 0; vertexJ < nodes; vertexJ++)
+		{
+			//找到InDegreeZeroVertex所指的节点
+			if (InDegreeZeroVertex != vertexJ && adjacency[InDegreeZeroVertex][vertexJ] != AWAY)
+			{
+				//删去边<InDegreeZeroVertex,vertexJ>
+				inDegree[vertexJ]--;
+
+				//删去该边后,没有其他的入边(即入度为0),则将该点放入拓扑序列中
+				if (inDegree[vertexJ] == 0)
+					InDegreeZeroVertexSet[InDegreeZeroVertexCnt++] = vertexJ;
+			}
+		}
+	}
+
+	//如果图中还有边,则图中有环,没有拓扑序列
+
+	for (int i = 0; i < topoIndex; i++)
+		cout << topoSortSequence[i] << " ";
+
+	cout << endl;
+}
+
 int main()
 {
 	Graph g;
 	g.input(2);
+	//g.output();
 
-	g.Kruskal(0);
+	g.topologicalSort();
 
 	return 0;
 }
