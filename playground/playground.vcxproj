@@ -11,7 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="graph.cpp" />
+    <ClCompile Include="MatrixChainMultiplication.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{406555E5-3DAF-4658-95BB-25C5E67F2CDA}</ProjectGuid>

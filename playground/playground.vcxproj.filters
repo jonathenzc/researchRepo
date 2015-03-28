@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="graph.cpp">
+    <ClCompile Include="MatrixChainMultiplication.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
