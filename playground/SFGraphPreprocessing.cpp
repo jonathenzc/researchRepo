@@ -140,6 +140,94 @@ void GraphPreprocess(string fileName)
 	vertexMap.clear();
 }
 
+//因为开发者的id之间可能有空的，社区发现的算法需要将他们填满
+void buildingMap(string fileName)
+{
+	/*************输入文本**************/
+	int dotIndex = fileName.find(".");
+	string filePrefix = fileName.substr(0, dotIndex);
+	//点输入文件名称
+	string vertexFileName = proDir + "Artifact_Edge_Vertex\\" + filePrefix + "_Vertex.txt";
+	ifstream vertexFile(vertexFileName);
+
+	/*************输出文本**************/
+	//点的映射文件名称
+	string mapFileName = proDir + "Artifact_Edge_Vertex\\" + filePrefix + "_VertexMap.txt";
+	//映射输出文件
+	ofstream mapFile(mapFileName);
+
+	/*************构建映射***************/
+	string s;
+	int cnt = 0;
+	while (!vertexFile.eof())
+	{
+		getline(vertexFile, s);
+
+		mapFile << s << " " << cnt << endl;
+		cnt++;
+	}
+
+	vertexFile.close();
+	mapFile.close();
+}
+
+//从映射文件中获取map
+map<int, int> gettingVertexMap(string fileName)
+{
+	map<int, int> m;
+	ifstream edgeFile(fileName);
+
+	while (!edgeFile.eof())
+	{
+		int v, mappedV;
+		edgeFile >> v >> mappedV;
+		m[v] = mappedV;
+	}
+
+	edgeFile.close();
+
+	return m;
+}
+
+//根据映射文件将边的文件映射过去
+void mappingGraph(string fileName)
+{
+	/*************输入文本**************/
+	int dotIndex = fileName.find(".");
+	string filePrefix = fileName.substr(0, dotIndex);
+	//映射、边输入文件名称
+	string edgeFileName = proDir + "Artifact_Edge_Vertex\\" + filePrefix + "_Edge.txt";
+	string mapFileName = proDir + "Artifact_Edge_Vertex\\" + filePrefix + "_VertexMap.txt";
+	ifstream edgeFile(edgeFileName);
+
+	/*************输出文本**************/
+	//映射后的边的名称
+	string mappingGraphName = proDir + "Artifact_MappedGraph\\" + filePrefix + "_Edge.txt";
+	//映射后边的文件
+	ofstream mappingGraphFile(mappingGraphName);
+
+	/*************构建映射***************/
+	map<int, int> m = gettingVertexMap(mapFileName);
+
+	/*************映射边***************/
+	string s;
+	while (!edgeFile.eof())
+	{
+		int startV, endV, weight;
+		edgeFile >> startV >> endV >> weight;
+		
+		int mappedStartV, mappedEndV;
+		mappedStartV = m[startV];
+		mappedEndV = m[endV];
+
+		mappingGraphFile << mappedStartV << " " << mappedEndV << " " << weight << endl;
+	}
+
+	edgeFile.close();
+	mappingGraphFile.close();
+}
+
+
 int main()
 {
 	//Step1: 构建文件名称的数组
@@ -154,7 +242,8 @@ int main()
 	for (int i = 0; i < 92; i++)
 	{
 		cout << fileNameArray[i] << endl;
-		GraphPreprocess(fileNameArray[i]);
+		//GraphPreprocess(fileNameArray[i]);
+		mappingGraph(fileNameArray[i]);
 	}
 
 	return 0;
